@@ -19,15 +19,15 @@ int main(int argc, char *argv[])
 
     //create our basic object
     Batch *batch = Batch_new();
-    Connection *connection = Connection_new("127.0.0.1:6379");
+    Connection *connection = Connection_new("127.0.0.1:9998");
     Executor *executor = Executor_new();
 
     //setup some commands
     char *cmd;
-    cmd = "SET foo 3\r\nbar\r\n";
+    cmd = "P\t1\tconcurrence_test\tbltest\tPRIMARY\ttest_id,test_string\n";
     Batch_write(batch, cmd, strlen(cmd), 1);
-    cmd = "GET foo\r\n";
-    Batch_write(batch, cmd, strlen(cmd), 1);
+    //cmd = "GET foo\r\n";
+    //Batch_write(batch, cmd, strlen(cmd), 1);
 
     //associate batch with connections
     Executor_add(executor, connection, batch);

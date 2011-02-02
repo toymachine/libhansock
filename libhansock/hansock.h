@@ -160,16 +160,6 @@ LIBREDISAPI void Batch_write(Batch *batch, const char *str, size_t str_len, int 
 LIBREDISAPI void Batch_write_decimal(Batch *batch, long decimal);
 
 /**
- * Writes a redis set command into the batch
- */
-LIBREDISAPI void Batch_write_set(Batch *batch, const char *key, int key_len, const char *value, int value_len);
-
-/**
- * Writes a redis get command into the batch
- */
-LIBREDISAPI void Batch_write_get(Batch *batch, const char *key, int key_len);
-
-/**
  * Reads the next reply from the batch. This will return the replies in the order the commands were given.
  * Call repeatedly until all replies have been read (it will return 0 when there are no more replies left).
  * For some reply types, data will point to the content of the reply (RT_BULK, RT_OK, RT_ERROR). In that

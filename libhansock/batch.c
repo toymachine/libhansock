@@ -15,7 +15,6 @@
 #include "batch.h"
 #include "list.h"
 #include "reply.h"
-#include "connection.h"
 
 #define BATCH_REPLY_ITERATOR_STACK_SIZE 2
 
@@ -213,26 +212,6 @@ void Batch_write_decimal(Batch *batch, long decimal)
     int buff_len = snprintf(buff, 32, "%ld", decimal);
     Batch_write(batch, buff, buff_len, 0);
 }
-
-void Batch_write_set(Batch *batch, const char *key, int key_len, const char *value, int value_len)
-{
-    Batch_write(batch, "SET ", 4, 0);
-    Batch_write(batch, key, key_len, 0);
-    Batch_write(batch, " ", 1, 0);
-    Batch_write_decimal(batch, value_len);
-    Batch_write(batch, "\r\n", 2, 0);
-    Batch_write(batch, value, value_len, 0);
-    Batch_write(batch, "\r\n", 2, 1);
-}
-
-void Batch_write_get(Batch *batch, const char *key, int key_len)
-{
-    Batch_write(batch, "GET ", 4, 0);
-    Batch_write(batch, key, key_len, 0);
-    Batch_write(batch, "\r\n", 2, 1);
-}
-
-
 
 int Batch_has_command(Batch *batch)
 {
