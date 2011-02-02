@@ -126,13 +126,7 @@ LIBREDISAPI void Connection_free(Connection *connection);
 typedef enum _ReplyType
 {
     RT_ERROR = -1,
-    RT_NONE = 0,
     RT_OK = 1,
-    RT_BULK_NIL = 2,
-    RT_BULK = 3,
-    RT_MULTIBULK_NIL = 4,
-    RT_MULTIBULK = 5,
-    RT_INTEGER = 6
 } ReplyType;
 
 /**

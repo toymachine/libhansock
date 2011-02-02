@@ -108,6 +108,7 @@ ReplyType Reply_type(Reply *reply)
     return reply->type;
 }
 
+/*
 void Reply_dump(Reply *reply) {
     ReplyType reply_type = reply->type;
     switch(reply_type) {
@@ -145,6 +146,7 @@ void Reply_dump(Reply *reply) {
         printf("unknown reply %d\n", reply_type);
     }
 }
+*/
 
 ALLOC_LIST_T(Batch, list)
 
@@ -255,6 +257,7 @@ int Batch_next_reply(Batch *batch, ReplyType *reply_type, char **data, size_t *l
 {
     DEBUG(("Batch_next_reply\n"));
 
+    /*
     if(reply_type == NULL || data == NULL || len == NULL) {
         Module_set_error(GET_MODULE(), "Invalid argument");
         return -1;
@@ -324,6 +327,7 @@ int Batch_next_reply(Batch *batch, ReplyType *reply_type, char **data, size_t *l
     }
     *len = current_reply->len;
     return level;
+    */
 }
 
 
