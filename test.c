@@ -24,17 +24,17 @@ int main(int argc, char *argv[])
 
     //setup some commands
     char *cmd;
-    cmd = "P\t1\tconcurrence_test\tbltest\tPRIMARY\ttest_id,test_string\n";
+    cmd = "P\t1\tconcurrence_test\ttbltest\tPRIMARY\ttest_id,test_string\n";
     Batch_write(batch, cmd, strlen(cmd), 1);
-    //cmd = "GET foo\r\n";
-    //Batch_write(batch, cmd, strlen(cmd), 1);
+    cmd = "1\t=\t1\t9\n";
+    Batch_write(batch, cmd, strlen(cmd), 1);
 
     //associate batch with connections
     Executor_add(executor, connection, batch);
 
     //execute it
     if(Executor_execute(executor, 500) <= 0) {
-        printf("error: %s", Module_last_error(module));
+        printf("executor error: %s", Module_last_error(module));
         error = 1;
     }
     else {
