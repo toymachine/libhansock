@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 #include "libhansock/hansock.h"
+#include "libhansock/parser.h"
 
 int main(int argc, char *argv[])
 {
@@ -16,6 +17,21 @@ int main(int argc, char *argv[])
 
     Module *module = Module_new();
     Module_init(module);
+
+    ReplyParser *parser = ReplyParser_new();
+
+    Buffer *buffer = Buffer_new(128);
+
+    char *s = "a\tb\tc\td\n";
+   
+    Buffer_write(buffer, s, strlen(s));
+    Buffer_flip(buffer);
+    Buffer_dump(buffer, 128);
+
+    Reply *reply = NULL;
+    ReplyParser_execute(parser, Buffer_data(buffer), Buffer_position(buffer), &reply);
+
+	/*
 
     //create our basic object
     Batch *batch = Batch_new();
@@ -52,6 +68,9 @@ int main(int argc, char *argv[])
     Executor_free(executor);
     Batch_free(batch);
     Connection_free(connection);
+	*/
+    Buffer_free(buffer);
+    ReplyParser_free(parser);
     Module_free(module);
 
     return error;

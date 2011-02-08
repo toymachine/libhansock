@@ -59,13 +59,13 @@ void ReplyParser_free(ReplyParser *rp)
 /**
  * A State machine for parsing replies.
  */
-ReplyParserResult ReplyParser_execute(ReplyParser *rp, Buffer *buffer, size_t len, Reply **reply)
+ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t len, Reply **reply)
 {
     DEBUG(("enter rp exec, rp->p: %d, len: %d, cs: %d\n", rp->p, len, rp->cs));
     assert(rp->p <= len);
+    *reply = NULL;
     while((rp->p) < len) {
-        *reply = NULL;
-        Byte c = Buffer_data(buffer)[rp->p];
+        Byte c = data[rp->p];
         //printf("cs: %d, char: %d\n", rp->cs, c);
         switch(rp->cs) {
             case 0: { //initial state

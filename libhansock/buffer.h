@@ -15,18 +15,18 @@
 
 typedef struct _Buffer Buffer;
 
-Buffer *Buffer_new(size_t size);
-void Buffer_free(Buffer *buffer);
-Byte *Buffer_data(Buffer *buffer);
-void Buffer_dump(Buffer *buffer, size_t limit);
-void Buffer_flip(Buffer *buffer);
+LIBREDISAPI Buffer *Buffer_new(size_t size);
+LIBREDISAPI void Buffer_free(Buffer *buffer);
+LIBREDISAPI Byte *Buffer_data(Buffer *buffer);
+LIBREDISAPI void Buffer_dump(Buffer *buffer, size_t limit);
+LIBREDISAPI void Buffer_flip(Buffer *buffer);
 void Buffer_clear(Buffer *buffer);
 void Buffer_fill(Buffer *buffer, Byte b);
-size_t Buffer_position(Buffer *buffer);
+LIBREDISAPI size_t Buffer_position(Buffer *buffer);
 void Buffer_set_position(Buffer *buffer, size_t position);
 void Buffer_set_limit(Buffer *buffer, size_t limit);
 size_t Buffer_remaining(Buffer *buffer);
-void Buffer_write(Buffer *buffer, const char *data, size_t len);
+LIBREDISAPI void Buffer_write(Buffer *buffer, const char *data, size_t len);
 size_t Buffer_recv(Buffer *buffer, int fd);
 size_t Buffer_send(Buffer *buffer, int fd);
 

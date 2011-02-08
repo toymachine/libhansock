@@ -20,10 +20,10 @@ typedef enum _ReplyParserResult
     RPR_REPLY = 2
 } ReplyParserResult;
 
-ReplyParser *ReplyParser_new();
-void ReplyParser_reset(ReplyParser *rp);
-void ReplyParser_free(ReplyParser *rp);
+LIBREDISAPI ReplyParser *ReplyParser_new();
+LIBREDISAPI void ReplyParser_reset(ReplyParser *rp);
+LIBREDISAPI void ReplyParser_free(ReplyParser *rp);
 
-ReplyParserResult ReplyParser_execute(ReplyParser *rp, Buffer *buffer, size_t len, Reply **reply);
+LIBREDISAPI ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t len, Reply **reply);
 
 #endif
