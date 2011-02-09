@@ -129,7 +129,7 @@ typedef enum _ReplyType
     RT_LINE = 1,
     RT_STRING = 2,
     RT_NULL = 3,
-    RT_ENCODED = 4
+    RT_ENCODED_STRING = 4
 } ReplyType;
 
 /**

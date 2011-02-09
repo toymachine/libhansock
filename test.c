@@ -22,9 +22,11 @@ int main(int argc, char *argv[])
 
     Buffer *buffer = Buffer_new(128);
 
-    char *s = "ab\tcd\tef\n";
+    //char *s = "ab\tcd\tef\n";
 
-    Buffer_write(buffer, s, strlen(s) + 1);
+    char *s = "aa\t\x0001\x0040\txx\n";
+
+    Buffer_write(buffer, s, 20);
     //Buffer_flip(buffer);
     Buffer_dump(buffer, 128);
 

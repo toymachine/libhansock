@@ -24,6 +24,7 @@ struct _ReplyParser
     int cs; //state
     Reply *reply;
     size_t mark; //helper to mark start of interesting data
+    int encoded; //whether we are currently parsing an encoded string
 };
 
 void ReplyParser_reset(ReplyParser *rp)
@@ -32,6 +33,7 @@ void ReplyParser_reset(ReplyParser *rp)
     rp->cs = 0;
     rp->mark = 0;
     rp->reply = NULL;
+    rp->encoded = 0;
 }
 
 ReplyParser *ReplyParser_new()
@@ -85,15 +87,16 @@ ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t 
                 else if(c == 0x09) { //TAB
                     //end of string
                     assert(rp->reply != NULL);
-                    Reply_add_child(rp->reply, Reply_new(RT_STRING, data, rp->mark, rp->p - rp->mark));
+                    Reply_add_child(rp->reply, Reply_new(rp->encoded ? RT_ENCODED_STRING : RT_STRING, data, rp->mark, rp->p - rp->mark));
                     rp->p++;
                     rp->cs = 1;
+                    rp->encoded = 0;
                     MARK;
                     continue;
                 }
                 else if(c == 0x0A) { //EOL
                     assert(rp->reply != NULL);
-                    Reply_add_child(rp->reply, Reply_new(RT_STRING, data, rp->mark, rp->p - rp->mark));
+                    Reply_add_child(rp->reply, Reply_new(rp->encoded ? RT_ENCODED_STRING : RT_STRING, data, rp->mark, rp->p - rp->mark));
                     *reply = rp->reply;
                     ReplyParser_reset(rp);
                     return RPR_REPLY;
@@ -106,6 +109,7 @@ ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t 
                 else if(c == 0x01) { //encoded char
                     rp->p++;
                     rp->cs = 3;
+                    rp->encoded = 1;
                     continue;
                 }
                 break;
@@ -114,14 +118,19 @@ ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t 
                 // after reading a NULL
                 // here we expect either a TAB or EOL
                 if(c == 0x09) { //TAB
+                    assert(rp->reply != NULL);
+                    Reply_add_child(rp->reply, Reply_new(RT_NULL, NULL, 0, 0));
                     rp->p++;
                     rp->cs = 1;
+                    MARK;
                     continue;
                 }
-                else if(c == 0x0A){ //EOL
-                    rp->p++;
-                    rp->cs = 4;
-                    continue;
+                else if(c == 0x0A) { //EOL
+                    assert(rp->reply != NULL);
+                    Reply_add_child(rp->reply, Reply_new(RT_NULL, NULL, 0, 0));
+                    *reply = rp->reply;
+                    ReplyParser_reset(rp);
+                    return RPR_REPLY;
                 }
                 break;
             }
@@ -135,8 +144,8 @@ ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t 
                 }
                 break;
             }
-            case 4: { //End of Line
-                break;
+            default: {
+                //will return error
             }
         }
         return RPR_ERROR;
