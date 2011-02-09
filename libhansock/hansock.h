@@ -126,7 +126,10 @@ LIBREDISAPI void Connection_free(Connection *connection);
 typedef enum _ReplyType
 {
     RT_ERROR = -1,
-    RT_OK = 1,
+    RT_LINE = 1,
+    RT_STRING = 2,
+    RT_NULL = 3,
+    RT_ENCODED = 4
 } ReplyType;
 
 /**

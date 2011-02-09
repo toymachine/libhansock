@@ -70,25 +70,33 @@ ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t 
         switch(rp->cs) {
             case 0: { //initial state
                 assert(rp->reply == NULL);
-                //rp->reply = Reply_new();
-                //fall trough
+                rp->reply = Reply_new(RT_LINE, NULL, 0, 0);
+                //fall trough to state 1
+                rp->cs = 1;
+                MARK;
             }
             case 1: { //normal state
                 if(c >= 0x10 && c <= 0xff) {
                     //NORMAL char, most common
                     rp->p++;
-                    //cs stays 1
+                    rp->cs = 1;
                     continue;
                 }
                 else if(c == 0x09) { //TAB
+                    //end of string
+                    assert(rp->reply != NULL);
+                    Reply_add_child(rp->reply, Reply_new(RT_STRING, data, rp->mark, rp->p - rp->mark));
                     rp->p++;
-                    //cs stays 1
+                    rp->cs = 1;
+                    MARK;
                     continue;
                 }
                 else if(c == 0x0A) { //EOL
-                    rp->p++;
-                    rp->cs = 4;
-                    continue;
+                    assert(rp->reply != NULL);
+                    Reply_add_child(rp->reply, Reply_new(RT_STRING, data, rp->mark, rp->p - rp->mark));
+                    *reply = rp->reply;
+                    ReplyParser_reset(rp);
+                    return RPR_REPLY;
                 }
                 else if(c == 0x00) { //NULL
                     rp->p++;

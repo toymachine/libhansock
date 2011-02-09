@@ -44,7 +44,7 @@ struct _Reply
 
     ReplyType type;
 
-    Buffer *buffer;
+    const char *data;
     size_t offset;
     size_t len;
 
@@ -53,13 +53,13 @@ struct _Reply
 
 ALLOC_LIST_T(Reply, list)
 
-Reply *Reply_new(ReplyType type, Buffer *buffer, size_t offset, size_t len)
+Reply *Reply_new(ReplyType type, const char *data, size_t offset, size_t len)
 {
     Reply *reply;
     Reply_list_alloc(&reply);
     DEBUG(("Reply_new, type: %d\n", type));
     reply->type = type;
-    reply->buffer = buffer;
+    reply->data = data;
     reply->offset = offset;
     reply->len = len;
     INIT_LIST_HEAD(&reply->children);
@@ -99,8 +99,8 @@ size_t Reply_length(Reply *reply)
 
 Byte *Reply_data(Reply *reply)
 {
-    assert(reply->buffer != NULL);
-    return Buffer_data(reply->buffer) + reply->offset;
+    assert(reply->data != NULL);
+    return (Byte *)reply->data + reply->offset;
 }
 
 ReplyType Reply_type(Reply *reply)
@@ -248,7 +248,7 @@ void Batch_abort(Batch *batch, const char *error)
     Buffer_write(batch->error, error, length);
     while(Batch_has_command(batch)) {
         DEBUG(("Batch abort, adding error reply\n"));
-        Batch_add_reply(batch, Reply_new(RT_ERROR, batch->error, 0, length));
+        Batch_add_reply(batch, Reply_new(RT_ERROR, Buffer_data(batch->error), 0, length));
     }
 }
 
