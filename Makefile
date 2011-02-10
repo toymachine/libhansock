@@ -1,6 +1,6 @@
 CC=gcc
-#CFLAGS=-I"./include" -O3 -pedantic -Wall -c -fmessage-length=0 -std=gnu99 -fPIC -fvisibility=hidden
-CFLAGS=-I"./include" -g -pedantic -Wall -c -fmessage-length=0 -std=gnu99 -fPIC -fvisibility=hidden
+CFLAGS=-I"./include" -O3 -pedantic -Wall -c -fmessage-length=0 -std=gnu99 -fPIC -fvisibility=hidden -DNDEBUG
+#CFLAGS=-I"./include" -g -pedantic -Wall -c -fmessage-length=0 -std=gnu99 -fPIC -fvisibility=hidden
 REDIS_HOME=$(CURDIR)
 PHP_EXT_BUILD=$(REDIS_HOME)/php/build
 
@@ -24,7 +24,10 @@ libhansock: libhansock/batch.o libhansock/connection.o libhansock/ketama.o libha
 c_test: libhansock test.o
 	gcc -o test test.o -Llib -lhansock
 
-all: c_test  
+c_client: libhansock
+	gcc client.c -o client  `mysql_config --cflags --libs`
+
+all: c_test c_client
 	
 clean:
 	cd libhansock; rm -rf *.o

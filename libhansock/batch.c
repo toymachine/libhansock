@@ -34,7 +34,7 @@ struct _Batch
 
 struct _Reply
 {
-    struct list_head list;
+    struct list_head list; //for creating lists of replies
 
     ReplyType type;
 
