@@ -69,6 +69,7 @@ typedef struct _Batch Batch;
 typedef struct _Connection Connection;
 typedef struct _Ketama Ketama;
 typedef struct _Executor Executor;
+typedef struct _ReplyIterator ReplyIterator;
 
 #define LIBREDISAPI __attribute__((visibility("default")))
 
@@ -163,6 +164,12 @@ LIBREDISAPI void Batch_write_decimal(Batch *batch, long decimal);
  */
 LIBREDISAPI char *Batch_error(Batch *batch);
 
+LIBREDISAPI ReplyIterator *Batch_get_replies(Batch *batch);
+
+LIBREDISAPI int ReplyIterator_next(ReplyIterator *iterator);
+LIBREDISAPI int ReplyIterator_get_reply(ReplyIterator *iterator, ReplyType *reply_type, char **data, size_t *len);
+LIBREDISAPI ReplyIterator *ReplyIterator_child_iterator(ReplyIterator *iterator);
+LIBREDISAPI void ReplyIterator_free(ReplyIterator *iterator);
 
 /**
  * Creates a new empty Executor

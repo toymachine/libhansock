@@ -19,12 +19,11 @@ int main(int argc, char *argv[])
     Module *module = Module_new();
     Module_init(module);
 
+    /*
     ReplyParser *parser = ReplyParser_new();
-
     Buffer *buffer = Buffer_new(128);
 
     //char *s = "ab\tcd\tef\n";
-
     //char *s = "aa\t\x0001\x0040\txx\n";
     //char *s = "\x0000\t\x0000\t\x0000\n";
     char *s = "a\t\n";
@@ -39,7 +38,10 @@ int main(int argc, char *argv[])
     assert(RPR_REPLY == result);
     printf("result: %d\n", result);
 
-    /*
+    Buffer_free(buffer);
+    ReplyParser_free(parser);
+
+    */
 
     //create our basic object
     Batch *batch = Batch_new();
@@ -62,23 +64,41 @@ int main(int argc, char *argv[])
         error = 1;
     }
     else {
+
+
+        ReplyIterator *replies = Batch_get_replies(batch);
+        while(ReplyIterator_next(replies)) {
+            ReplyType reply_type;
+            char *reply_data;
+            size_t reply_len;
+            ReplyIterator_get_reply(replies, &reply_type, &reply_data, &reply_len);
+            printf("reply type: %d, data: '%.*s'\n", (int)reply_type, reply_len, reply_data);
+            ReplyIterator *children = ReplyIterator_child_iterator(replies);
+            while(ReplyIterator_next(children)) {
+                ReplyType child_reply_type;
+                char *child_reply_data;
+                size_t child_reply_len;
+                ReplyIterator_get_reply(children, &child_reply_type, &child_reply_data, &child_reply_len);
+                printf("\tchild reply type: %d, data: '%.*s'\n", (int)child_reply_type, child_reply_len, child_reply_data);
+            }
+            ReplyIterator_free(children);
+        }
+        ReplyIterator_free(replies);
+
         //read out replies
-        ReplyType reply_type;
-        char *reply_data;
-        size_t reply_len;
+        /*
         int level;
         while((level = Batch_next_reply(batch, &reply_type, &reply_data, &reply_len))) {
             printf("level: %d, reply type: %d, data: '%.*s'\n", level, (int)reply_type, reply_len, reply_data);
         }
+        */
     }
 
     //release all resources
     Executor_free(executor);
     Batch_free(batch);
     Connection_free(connection);
-    */
-    Buffer_free(buffer);
-    ReplyParser_free(parser);
+
     Module_free(module);
 
     return error;

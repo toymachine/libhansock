@@ -16,8 +16,6 @@
 #include "list.h"
 #include "reply.h"
 
-#define BATCH_REPLY_ITERATOR_STACK_SIZE 2
-
 struct _Batch
 {
 #ifdef SINGLETHREADED
@@ -104,23 +102,69 @@ ReplyType Reply_type(Reply *reply)
     return reply->type;
 }
 
-void Reply_dump(Reply *reply) {
-    ReplyType reply_type = reply->type;
-    switch(reply_type) {
-    case RT_LINE: {
-        printf("line reply");
-        break;
+
+struct _ReplyIterator
+{
+    struct list_head *head;
+    struct list_head *current;
+};
+
+ALLOC_LIST_T(ReplyIterator, list)
+
+ReplyIterator *ReplyIterator_new(struct list_head *replies)
+{
+    ReplyIterator *iterator;
+    ReplyIterator_list_alloc(&iterator);
+    iterator->head = replies;
+    iterator->current = iterator->head;
+    return iterator;
+}
+
+void _ReplyIterator_free(ReplyIterator *iterator, int final)
+{
+
+}
+
+int ReplyIterator_next(ReplyIterator *iterator)
+{
+    iterator->current = iterator->current->next;
+    return iterator->current != iterator->head;
+}
+
+int ReplyIterator_get_reply(ReplyIterator *iterator, ReplyType *reply_type, char **data, size_t *len)
+{
+    if(iterator->current != iterator->head) {
+        Reply *current_reply = list_entry(iterator->current, Reply, list);
+        *reply_type = current_reply->type;
+        *len = current_reply->len;
+        if(current_reply->type == RT_ERROR ||
+           current_reply->type == RT_STRING ||
+           current_reply->type == RT_ENCODED_STRING) {
+                *data = Reply_data(current_reply);
+        }
+        else {
+            *data = NULL;
+        }
+        return 0;
     }
-    case RT_STRING: {
-        printf("string reply: %.*s\n", (int)reply->len, Reply_data(reply));
-        break;
+    else {
+        return -1; //TODO set module error
     }
-    case RT_NULL: {
-        printf("null reply\n");
-        break;
+}
+
+ReplyIterator *ReplyIterator_child_iterator(ReplyIterator *iterator)
+{
+    if(iterator->current != iterator->head) {
+        Reply *current_reply = list_entry(iterator->current, Reply, list);
+        if(list_empty(&current_reply->children)) {
+            return NULL;
+        }
+        else {
+            return ReplyIterator_new(&current_reply->children);
+        }
     }
-    default:
-        printf("unknown reply %d\n", reply_type);
+    else {
+        return NULL;
     }
 }
 
@@ -199,6 +243,11 @@ void Batch_add_reply(Batch *batch, Reply *reply)
     DEBUG(("add reply/cmd back to reply queue\n"));
     batch->num_commands -= 1;
     list_add_tail(&reply->list, &batch->reply_queue);
+}
+
+ReplyIterator *Batch_get_replies(Batch *batch)
+{
+    return ReplyIterator_new(&batch->reply_queue);
 }
 
 char *Batch_error(Batch *batch)

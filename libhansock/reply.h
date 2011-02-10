@@ -21,6 +21,4 @@ void Reply_add_child(Reply *reply, Reply *child);
 int Reply_has_child(Reply *reply);
 Reply *Reply_pop_child(Reply *reply);
 
-void Reply_dump(Reply *reply);
-
 #endif /* REPLY_H_ */
