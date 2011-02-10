@@ -64,8 +64,6 @@ int main(int argc, char *argv[])
         error = 1;
     }
     else {
-
-
         ReplyIterator *replies = Batch_get_replies(batch);
         while(ReplyIterator_next(replies)) {
             ReplyType reply_type;
@@ -84,14 +82,6 @@ int main(int argc, char *argv[])
             ReplyIterator_free(children);
         }
         ReplyIterator_free(replies);
-
-        //read out replies
-        /*
-        int level;
-        while((level = Batch_next_reply(batch, &reply_type, &reply_data, &reply_len))) {
-            printf("level: %d, reply type: %d, data: '%.*s'\n", level, (int)reply_type, reply_len, reply_data);
-        }
-        */
     }
 
     //release all resources

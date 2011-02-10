@@ -105,6 +105,10 @@ ReplyType Reply_type(Reply *reply)
 
 struct _ReplyIterator
 {
+#ifdef SINGLETHREADED
+    struct list_head list; //for creating lists of reply iterators
+#endif
+
     struct list_head *head;
     struct list_head *current;
 };
@@ -122,7 +126,7 @@ ReplyIterator *ReplyIterator_new(struct list_head *replies)
 
 void _ReplyIterator_free(ReplyIterator *iterator, int final)
 {
-
+    ReplyIterator_list_free(iterator, final);
 }
 
 int ReplyIterator_next(ReplyIterator *iterator)
@@ -185,13 +189,26 @@ Batch *Batch_new()
     return batch;
 }
 
+void _Batch_reply_list_free(struct list_head *list_to_free)
+{
+    while(!list_empty(list_to_free)) {
+        DEBUG(("_Batch_reply_list_free\n"));
+        Reply *reply = list_pop_T(Reply, list, list_to_free);
+        _Batch_reply_list_free(&reply->children);
+        Reply_free(reply);
+    }
+}
+
 void _Batch_free(Batch *batch, int final)
 {
     DEBUG(("_Batch_free\n"));
+    /*
     while(!list_empty(&batch->reply_queue)) {
         Reply *reply = list_pop_T(Reply, list, &batch->reply_queue);
         Reply_free(reply);
     }
+    */
+    _Batch_reply_list_free(&batch->reply_queue);
     if(final) {
         DEBUG(("_Batch_free final\n"));
         Buffer_free(batch->read_buffer);
