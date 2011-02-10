@@ -30,10 +30,6 @@ struct _Batch
     Buffer *write_buffer;
     Buffer *read_buffer;
 
-    //simple stack for iterating results
-    int current_reply_sp;
-    struct list_head *current_reply[BATCH_REPLY_ITERATOR_STACK_SIZE * 2];
-
     //error for aborted batch
     Buffer *error;
 };
@@ -108,45 +104,25 @@ ReplyType Reply_type(Reply *reply)
     return reply->type;
 }
 
-/*
 void Reply_dump(Reply *reply) {
     ReplyType reply_type = reply->type;
     switch(reply_type) {
-    case RT_OK: {
-        printf("ok reply: %.*s\n", (int)reply->len, Reply_data(reply));
+    case RT_LINE: {
+        printf("line reply");
         break;
     }
-    case RT_BULK: {
-        printf("bulk reply: %.*s\n", (int)reply->len, Reply_data(reply));
+    case RT_STRING: {
+        printf("string reply: %.*s\n", (int)reply->len, Reply_data(reply));
         break;
     }
-    case RT_BULK_NIL: {
-        printf("bulk nil\n");
-        break;
-    }
-    case RT_MULTIBULK: {
-        printf("multi bulk reply, count: %d\n", (int)reply->len);
-        Reply *child;
-        list_for_each_entry(child, &reply->children, list) {
-            assert(child != NULL);
-            ReplyType child_type = child->type;
-            if(RT_BULK == child_type) {
-                printf("\tbulk reply: %.*s\n", (int)child->len, Reply_data(child));
-            }
-            else if(RT_BULK_NIL == child_type) {
-                printf("\tbulk nil\n");
-            }
-            else {
-                assert(0);
-            }
-        }
+    case RT_NULL: {
+        printf("null reply\n");
         break;
     }
     default:
         printf("unknown reply %d\n", reply_type);
     }
 }
-*/
 
 ALLOC_LIST_T(Batch, list)
 
@@ -159,10 +135,6 @@ Batch *Batch_new()
     }
     batch->num_commands = 0;
     INIT_LIST_HEAD(&batch->reply_queue);
-
-    batch->current_reply_sp = 0;
-    batch->current_reply[0] = &batch->reply_queue;
-    batch->current_reply[1] = &batch->reply_queue;
 
     batch->error = NULL;
 
@@ -251,85 +223,6 @@ void Batch_abort(Batch *batch, const char *error)
         Batch_add_reply(batch, Reply_new(RT_ERROR, Buffer_data(batch->error), 0, length));
     }
 }
-
-
-int Batch_next_reply(Batch *batch, ReplyType *reply_type, char **data, size_t *len)
-{
-    DEBUG(("Batch_next_reply\n"));
-
-    /*
-    if(reply_type == NULL || data == NULL || len == NULL) {
-        Module_set_error(GET_MODULE(), "Invalid argument");
-        return -1;
-    }
-
-    *reply_type = RT_NONE;
-    *data = NULL;
-    *len = 0;
-
-    struct list_head *current = batch->current_reply[batch->current_reply_sp];
-    struct list_head *last = batch->current_reply[batch->current_reply_sp + 1];
-
-    current = current->next;
-
-    batch->current_reply[batch->current_reply_sp] = current;
-
-    if(current == last) {
-        if(batch->current_reply_sp > 0) {
-            DEBUG(("Batch_next_reply, current == last, pop\n"));
-            batch->current_reply_sp -= 2;
-            assert(batch->current_reply_sp >= 0);
-            current = batch->current_reply[batch->current_reply_sp];
-            last = batch->current_reply[batch->current_reply_sp + 1];
-            if(current == last) {
-                //ok were also at the end at this level
-                return 0;
-            }
-        }
-        else {
-            DEBUG(("Batch_next_reply, current == last, end\n"));
-            return 0;
-        }
-    }
-
-    int level = (batch->current_reply_sp / 2) + 1;
-    Reply *current_reply = list_entry(current, Reply, list);
-    *reply_type = current_reply->type;
-//		RT_NONE = 0,
-//	    RT_OK = 1,
-//		RT_ERROR = 2,
-//	    RT_BULK_NIL = 3,
-//	    RT_BULK = 4,
-//	    RT_MULTIBULK_NIL = 5,
-//	    RT_MULTIBULK = 6
-//		RT_INTEGER = 7
-    if(current_reply->type == RT_OK ||
-       current_reply->type == RT_ERROR ||
-       current_reply->type == RT_BULK ||
-       current_reply->type == RT_INTEGER) {
-        *data = Reply_data(current_reply);
-    }
-    else if(current_reply->type == RT_MULTIBULK) {
-        *data = NULL;
-        batch->current_reply[batch->current_reply_sp] = current->next;
-        batch->current_reply_sp += 2;
-        assert(batch->current_reply_sp <= (BATCH_REPLY_ITERATOR_STACK_SIZE * 2));
-        batch->current_reply[batch->current_reply_sp] = &current_reply->children;
-        batch->current_reply[batch->current_reply_sp + 1] = &current_reply->children;
-    }
-    else if(current_reply->type == RT_NONE ||
-             current_reply->type == RT_BULK_NIL ||
-             current_reply->type == RT_MULTIBULK_NIL) {
-        *data = NULL;
-    }
-    else {
-        assert(0);
-    }
-    *len = current_reply->len;
-    return level;
-    */
-}
-
 
 Buffer *Batch_read_buffer(Batch *batch)
 {

@@ -157,17 +157,6 @@ LIBREDISAPI void Batch_write(Batch *batch, const char *str, size_t str_len, int 
 LIBREDISAPI void Batch_write_decimal(Batch *batch, long decimal);
 
 /**
- * Reads the next reply from the batch. This will return the replies in the order the commands were given.
- * Call repeatedly until all replies have been read (it will return 0 when there are no more replies left).
- * For some reply types, data will point to the content of the reply (RT_BULK, RT_OK, RT_ERROR). In that
- * case the len argument will contain the length of this data (e.g. the data is NOT null terminated).
- * In the case of a multibulk reply RT_MULTIBULK, the len argument will contain the number of bulk replies that follow.
- * Note that any data pointed to by the data argument is only valid as long as the batch is not freed.
- * If you want to do something with it later on, you need to copy it yourself.
- */
-LIBREDISAPI int Batch_next_reply(Batch *batch, ReplyType *reply_type, char **data, size_t *len);
-
-/**
  * If a batch was aborted (maybe because a connection went down or timed-out), there will be an error message
  * associated with the batch. Use this function to retrieve it.
  * Returns NULL if there was no error in the batch.

@@ -79,7 +79,7 @@ ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t 
             }
             case 1: { //normal state
                 if(c >= 0x10 && c <= 0xff) {
-                    //NORMAL char, most common
+                    //NORMAL unencoded char, most common
                     rp->p++;
                     rp->cs = 1;
                     continue;
@@ -106,7 +106,7 @@ ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t 
                     rp->cs = 2;
                     continue;
                 }
-                else if(c == 0x01) { //encoded char
+                else if(c == 0x01) { //start of encoded char
                     rp->p++;
                     rp->cs = 3;
                     rp->encoded = 1;
@@ -136,7 +136,7 @@ ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t 
             }
             case 3: {
                 // next char should be encoded char
-                if(c >= 0x40 && c <= 0x4f) {
+                if((c >= 0x40) && (c <= 0x4f)) {
                     //OK
                     rp->p++;
                     rp->cs = 1;

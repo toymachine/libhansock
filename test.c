@@ -7,6 +7,7 @@
 */
 
 #include <stdio.h>
+#include <assert.h>
 
 #include "libhansock/hansock.h"
 #include "libhansock/parser.h"
@@ -24,14 +25,19 @@ int main(int argc, char *argv[])
 
     //char *s = "ab\tcd\tef\n";
 
-    char *s = "aa\t\x0001\x0040\txx\n";
+    //char *s = "aa\t\x0001\x0040\txx\n";
+    //char *s = "\x0000\t\x0000\t\x0000\n";
+    char *s = "a\t\n";
 
     Buffer_write(buffer, s, 20);
     //Buffer_flip(buffer);
     Buffer_dump(buffer, 128);
 
     Reply *reply = NULL;
-    ReplyParser_execute(parser, Buffer_data(buffer), Buffer_position(buffer), &reply);
+
+    ReplyParserResult result = ReplyParser_execute(parser, Buffer_data(buffer), Buffer_position(buffer), &reply);
+    assert(RPR_REPLY == result);
+    printf("result: %d\n", result);
 
     /*
 
