@@ -51,7 +51,7 @@ Reply *Reply_new(ReplyType type, const char *data, size_t offset, size_t len)
 {
     Reply *reply;
     Reply_list_alloc(&reply);
-    DEBUG(("Reply_new, type: %d\n", type));
+    DEBUG(("Reply_new, type: %d, offset: %d, len: %d\n", type, offset, len));
     reply->type = type;
     reply->data = data;
     reply->offset = offset;

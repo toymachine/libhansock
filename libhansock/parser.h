@@ -21,7 +21,7 @@ typedef enum _ReplyParserResult
 } ReplyParserResult;
 
 LIBREDISAPI ReplyParser *ReplyParser_new();
-LIBREDISAPI void ReplyParser_reset(ReplyParser *rp);
+LIBREDISAPI void ReplyParser_reset(ReplyParser *rp, int p);
 LIBREDISAPI void ReplyParser_free(ReplyParser *rp);
 
 LIBREDISAPI ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t len, Reply **reply);

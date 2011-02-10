@@ -27,9 +27,9 @@ struct _ReplyParser
     int encoded; //whether we are currently parsing an encoded string
 };
 
-void ReplyParser_reset(ReplyParser *rp)
+void ReplyParser_reset(ReplyParser *rp, int p)
 {
-    rp->p = 0;
+    rp->p = p;
     rp->cs = 0;
     rp->mark = 0;
     rp->reply = NULL;
@@ -44,7 +44,7 @@ ReplyParser *ReplyParser_new()
         Module_set_error(GET_MODULE(), "Out of memory while allocating ReplyParser");
         return NULL;
     }
-    ReplyParser_reset(rp);
+    ReplyParser_reset(rp, 0);
     return rp;
 }
 
@@ -98,7 +98,7 @@ ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t 
                     assert(rp->reply != NULL);
                     Reply_add_child(rp->reply, Reply_new(rp->encoded ? RT_ENCODED_STRING : RT_STRING, data, rp->mark, rp->p - rp->mark));
                     *reply = rp->reply;
-                    ReplyParser_reset(rp);
+                    ReplyParser_reset(rp, ++rp->p);
                     return RPR_REPLY;
                 }
                 else if(c == 0x00) { //NULL
@@ -129,7 +129,7 @@ ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t 
                     assert(rp->reply != NULL);
                     Reply_add_child(rp->reply, Reply_new(RT_NULL, NULL, 0, 0));
                     *reply = rp->reply;
-                    ReplyParser_reset(rp);
+                    ReplyParser_reset(rp, ++rp->p);
                     return RPR_REPLY;
                 }
                 break;

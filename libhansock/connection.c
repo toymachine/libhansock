@@ -251,7 +251,7 @@ void Connection_execute_start(Connection *connection, Executor *executor, Batch 
         connection->state = CS_CLOSED;
     }
 
-    ReplyParser_reset(connection->parser);
+    ReplyParser_reset(connection->parser, 0);
     Buffer_flip(Batch_write_buffer(batch));
 
     DEBUG(("Connection exec write buff:\n"));
