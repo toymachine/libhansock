@@ -34,6 +34,8 @@ clean:
 	rm -rf lib
 	rm -rf test
 	rm -rf test.o
+	rm -rf client
+	rm -rf client.o
 	-find . -name *.pyc -exec rm -rf {} \;
 	-find . -name *.so -exec rm -rf {} \;
 	-find . -name '*~' -exec rm -rf {} \;

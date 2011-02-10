@@ -8,23 +8,27 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 #include "libhansock/hansock.h"
 #include "libhansock/parser.h"
 
-int test(Connection *connection, int init_index)
+int test(Connection *connection, int init_index, int pk)
 {
     Batch *batch = Batch_new();
     Executor *executor = Executor_new();
 
     //setup some commands
-    char *cmd;
+    char cmd[1024];
+
     if(init_index) {
-        cmd = "P\t1\tconcurrence_test\ttbltest\tPRIMARY\ttest_id,test_string\n";
+        sprintf(cmd, "P\t1\tconcurrence_test\ttbltest\tPRIMARY\ttest_id,test_string\n");
         Batch_write(batch, cmd, strlen(cmd), 1);
     }
 
-    cmd = "1\t=\t1\t9\n";
+    sprintf(cmd, "1\t=\t1\t%d\n", pk);
     Batch_write(batch, cmd, strlen(cmd), 1);
 
     //associate batch with connections
@@ -62,7 +66,7 @@ int test(Connection *connection, int init_index)
     return 0;
 }
 
-int main(int argc, char *argv[])
+int testor()
 {
     Module *module = Module_new();
     Module_init(module);
@@ -70,12 +74,42 @@ int main(int argc, char *argv[])
     //create our basic object
     Connection *connection = Connection_new("127.0.0.1:9998");
 
-    for(int i = 0; i < 1000000; i++) {
-        test(connection, i == 0);
+    for(int i = 0; i < 100000; i++) {
+        test(connection, i == 0, i % 300000);
     }
 
     Connection_free(connection);
 
     Module_free(module);
 
+    return 0;
+}
+
+#define N 10
+
+int main(int argc, char *argv[])
+{
+
+    int i;
+    int pids[N];
+
+    for(i = 0; i < N; i++) {
+        int pid = fork();
+        if(pid == 0) {
+            //child
+            testor();
+            return 0;
+        }
+        else {
+            //parent
+            pids[i] = pid;
+        }
+    }
+    //parent
+    int status;
+    for(i = 0; i < N; i++) {
+        wait(&status);
+    }
+
+    return 0;
 }
