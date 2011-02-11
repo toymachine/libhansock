@@ -1,8 +1,6 @@
 CC=gcc
 CFLAGS=-I"./include" -O3 -pedantic -Wall -c -fmessage-length=0 -std=gnu99 -fPIC -fvisibility=hidden -DNDEBUG
 #CFLAGS=-I"./include" -g -pedantic -Wall -c -fmessage-length=0 -std=gnu99 -fPIC -fvisibility=hidden
-REDIS_HOME=$(CURDIR)
-PHP_EXT_BUILD=$(REDIS_HOME)/php/build
 
 UNAME := $(shell uname)
 

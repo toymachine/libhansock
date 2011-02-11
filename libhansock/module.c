@@ -1,7 +1,7 @@
 /**
-* Copyright (C) 2010, Hyves (Startphone Ltd.)
+* Copyright (C) 2010 - 2011, Hyves (Startphone Ltd.)
 *
-* This module is part of Libredis (http://github.com/toymachine/libredis) and is released under
+* This module is part of Libhansock (http://github.com/toymachine/libhansock) and is released under
 * the New BSD License: http://www.opensource.org/licenses/bsd-license.php
 *
 */
