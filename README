@@ -1,0 +1,75 @@
+This is the README for Libhansock (http://github.com/toymachine/libhansock)
+
+Libhansock is general client library for HandlerSocket written in C.
+
+The goal of Libhansock is to provide efficient low-level plumbing for accessing HandlerSocket enabled MySQL servers.
+
+It should be easy to build higher level abstractions on top of Libhansock (for instance for PHP, Python, Ruby etc.)
+
+Libhansock provides a fast and efficient IO implementation for talking concurrently
+with multiple HS servers (using non-blocking asynchronous IO, based on the 'poll' system call).
+It uses a 'batch' abstraction in order to support pipeline-ing
+(e.g. send more than 1 command to HS in a single operation), and
+finally a consistent hashing implementation (Ketama) is provided for partitioning keys across servers.
+
+The low-level library knows about and validates HS results, but does not restrict you
+in what commands you send trough it, e.g. you can/must format commands yourself. This allows the library
+to be used with any new and upcoming HS versions without updates, as long as the
+format of the results does not change.
+
+The public C API is documented in libhansock/hansock.h and an example is given in test.c (make c_test)
+
+Basically,
+
+1. Commands are written into Batches;
+2. Batches are associated with Connections trough an Executor; Executor::add(connection, batch)
+3. The total operation is performed within a configurable timeout by calling Executor::execute(timeout)
+4. When execution returns, batches will contain replies that can be read out using an iterator; Batch::get_replies()
+
+    Batch *batch = Batch_new();
+    Executor *executor = Executor_new();
+    Connection *connection = Connection_new("127.0.0.1:9998");
+
+    //setup some commands
+    char cmd[1024];
+
+    sprintf(cmd, "P\t1\ttestdb\ttesttable\tPRIMARY\ttest_id,test_string\n");
+
+    Batch_write(batch, cmd, strlen(cmd), 1);
+
+    sprintf(cmd, "1\t=\t1\t%d\n", pk);
+
+    Batch_write(batch, cmd, strlen(cmd), 1);
+
+    //associate batch with connections
+    Executor_add(executor, connection, batch);
+
+    //execute it
+    if(Executor_execute(executor, 500) <= 0) {
+        return -1;
+    }
+    else {
+        ReplyIterator *replies = Batch_get_replies(batch);
+        while(ReplyIterator_next(replies)) {
+            ReplyType reply_type;
+            char *reply_data;
+            size_t reply_len;
+            ReplyIterator_get_reply(replies, &reply_type, &reply_data, &reply_len);
+            printf("reply type: %d, data: '%.*s'\n", (int)reply_type, reply_len, reply_data);
+            ReplyIterator *children = ReplyIterator_child_iterator(replies);
+            while(ReplyIterator_next(children)) {
+                ReplyType child_reply_type;
+                char *child_reply_data;
+                size_t child_reply_len;
+                ReplyIterator_get_reply(children, &child_reply_type, &child_reply_data, &child_reply_len);
+                printf("\tchild reply type: %d, data: '%.*s'\n", (int)child_reply_type, child_reply_len, child_reply_data);
+            }
+            ReplyIterator_free(children);
+        }
+        ReplyIterator_free(replies);
+    }
+
+    //release all resources
+    Executor_free(executor);
+    Batch_free(batch);
+    Connection_free(connection);
