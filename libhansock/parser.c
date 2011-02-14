@@ -78,7 +78,7 @@ ReplyParserResult ReplyParser_execute(ReplyParser *rp, const char *data, size_t 
                 MARK;
             }
             case 1: { //normal state
-                if(c >= 0x10 && c <= 0xff) {
+                if(c >= 16 && c <= 255) {
                     //NORMAL unencoded char, most common
                     rp->p++;
                     rp->cs = 1;
