@@ -15,6 +15,9 @@
 #include "libhansock/hansock.h"
 #include "libhansock/parser.h"
 
+#define N 1 //number of test clients
+#define N_QRY 1 //number of queries per client
+
 int test(Connection *connection, int init_index, int pk)
 {
     Batch *batch = Batch_new();
@@ -31,30 +34,53 @@ int test(Connection *connection, int init_index, int pk)
     sprintf(cmd, "1\t=\t1\t%d\n", pk);
     Batch_write(batch, cmd, strlen(cmd), 1);
 
+    /*
+    sprintf(cmd, "1\t=\t1\t%d\n", pk + 1);
+    Batch_write(batch, cmd, strlen(cmd), 1);
+
+    sprintf(cmd, "1\t=\t1\t%d\n", pk + 2);
+    Batch_write(batch, cmd, strlen(cmd), 1);
+
+    sprintf(cmd, "1\t=\t1\t%d\n", pk + 3);
+    Batch_write(batch, cmd, strlen(cmd), 1);
+
+    sprintf(cmd, "1\t=\t1\t%d\n", pk + 4);
+    Batch_write(batch, cmd, strlen(cmd), 1);
+
+    sprintf(cmd, "1\t=\t1\t%d\n", pk + 5);
+    Batch_write(batch, cmd, strlen(cmd), 1);
+
+    sprintf(cmd, "1\t=\t1\t%d\n", pk + 6);
+    Batch_write(batch, cmd, strlen(cmd), 1);
+
+    sprintf(cmd, "1\t=\t1\t%d\n", pk + 7);
+    Batch_write(batch, cmd, strlen(cmd), 1);
+    */
+
     //associate batch with connections
     Executor_add(executor, connection, batch);
 
     //execute it
-    if(Executor_execute(executor, 500) <= 0) {
-        return -1;
-    }
-    else {
+    if(Executor_execute(executor, 500) > 0) {
+        //all ok
         ReplyIterator *replies = Batch_get_replies(batch);
         while(ReplyIterator_next(replies)) {
             ReplyType reply_type;
             char *reply_data;
             size_t reply_len;
             ReplyIterator_get_reply(replies, &reply_type, &reply_data, &reply_len);
-            //printf("reply type: %d, data: '%.*s'\n", (int)reply_type, reply_len, reply_data);
+            printf("reply type: %d, data: '%.*s'\n", (int)reply_type, reply_len, reply_data);
             ReplyIterator *children = ReplyIterator_child_iterator(replies);
-            while(ReplyIterator_next(children)) {
-                ReplyType child_reply_type;
-                char *child_reply_data;
-                size_t child_reply_len;
-                ReplyIterator_get_reply(children, &child_reply_type, &child_reply_data, &child_reply_len);
-                //printf("\tchild reply type: %d, data: '%.*s'\n", (int)child_reply_type, child_reply_len, child_reply_data);
+            if(children != NULL) {
+                while(ReplyIterator_next(children)) {
+                    ReplyType child_reply_type;
+                    char *child_reply_data;
+                    size_t child_reply_len;
+                    ReplyIterator_get_reply(children, &child_reply_type, &child_reply_data, &child_reply_len);
+                    printf("\tchild reply type: %d, data: '%.*s'\n", (int)child_reply_type, child_reply_len, child_reply_data);
+                }
+                ReplyIterator_free(children);
             }
-            ReplyIterator_free(children);
         }
         ReplyIterator_free(replies);
     }
@@ -74,7 +100,7 @@ int testor()
     //create our basic object
     Connection *connection = Connection_new("127.0.0.1:9998");
 
-    for(int i = 0; i < 100000; i++) {
+    for(int i = 0; i < N_QRY; i++) {
         test(connection, i == 0, i % 300000);
     }
 
@@ -85,7 +111,6 @@ int testor()
     return 0;
 }
 
-#define N 10
 
 /**
  * For N test processes that each will issue 100.000 queries

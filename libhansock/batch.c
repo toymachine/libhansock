@@ -126,13 +126,20 @@ ReplyIterator *ReplyIterator_new(struct list_head *replies)
 
 void _ReplyIterator_free(ReplyIterator *iterator, int final)
 {
-    ReplyIterator_list_free(iterator, final);
+    if(iterator != NULL) {
+        ReplyIterator_list_free(iterator, final);
+    }
 }
 
 int ReplyIterator_next(ReplyIterator *iterator)
 {
-    iterator->current = iterator->current->next;
-    return iterator->current != iterator->head;
+    if(iterator == NULL) {
+        return 0; //some basic protection
+    }
+    else {
+        iterator->current = iterator->current->next;
+        return iterator->current != iterator->head;
+    }
 }
 
 int ReplyIterator_get_reply(ReplyIterator *iterator, ReplyType *reply_type, char **data, size_t *len)
@@ -152,13 +159,17 @@ int ReplyIterator_get_reply(ReplyIterator *iterator, ReplyType *reply_type, char
         return 0;
     }
     else {
+        DEBUG(("TODO set ERROR"));
         return -1; //TODO set module error
     }
 }
 
 ReplyIterator *ReplyIterator_child_iterator(ReplyIterator *iterator)
 {
-    if(iterator->current != iterator->head) {
+    if(iterator == NULL) {
+        return NULL;
+    }
+    else if(iterator->current != iterator->head) {
         Reply *current_reply = list_entry(iterator->current, Reply, list);
         if(list_empty(&current_reply->children)) {
             return NULL;

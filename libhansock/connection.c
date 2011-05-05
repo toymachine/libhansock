@@ -372,6 +372,7 @@ void Connection_read_data(Connection *connection, int ordinal)
         case RPR_MORE: {
             DEBUG(("read data RPR_MORE buf recv\n"));
             size_t res = Buffer_recv(buffer, connection->sockfd);
+            DEBUG(("read data RPR_MORE res: %d\n", res));
 #ifndef NDEBUG
         Buffer_dump(buffer, 128);
 #endif
@@ -587,15 +588,31 @@ int Executor_execute(Executor *executor, int timeout_ms)
     }
 
     if(poll_result > 1) {
+        DEBUG(("Executor poll result > 1, ALL OK\n"));
         poll_result = 1;
     }
+
     if(poll_result < 0) {
+        DEBUG(("Executor poll result < 0, Setting module error\n"));
         Module_set_error(GET_MODULE(), "Execute select error, errno: [%d] %s", errno, strerror(errno));
+        poll_result = -2;
     }
     else if(poll_result == 0) {
+        DEBUG(("Executor poll result == 0, Timeout, setting module error\n"));
         Module_set_error(GET_MODULE(), "Execute timeout");
     }
+    else {
+        DEBUG(("Checking for batch errors\n"));
+        for(int i = 0; i < executor->numpairs; i++) {
+            struct _Pair *pair = &executor->pairs[i];
+            if(Batch_error(pair->batch) != NULL) {
+                poll_result = -1;
+                break;
+            }
+       }
+    }
     DEBUG(("Executor execute done\n"));
+
     return poll_result;
 }
 

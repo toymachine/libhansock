@@ -23,43 +23,7 @@
  *
  * In order to communicate with a handlersocket server you will need at least to create an instance of Batch, Connection and Executor. e.g.:
  *
- * Batch *batch = Batch_new();
- * Connection *connection = Connection_new("127.0.0.1:6379");
- * Executor *executor = Executor_new();
- *
- * One or more HandlerSocket commands can be written into the batch using the Batch_write_XXX functions:
- *
- * (See protocol.en.txt for examples of the protocol)
- *
- * Batch_write(batch, "P\t1\tconcurrence_test\ttbltest\tPRIMARY\ttest_id,test_string\n", 40, 1);
- *
- * Then we tell the library that we want to execute these commands on a specific HS server by associating the Batch
- * and Connection using the 'Executor_add' function.
- *
- * Executor_add(executor, connection, batch);
- *
- * Note that we can associate multiple (connection, batch) pairs by calling the Executor_add function for each pair.
- *
- * Then we will execute all of the commands against all of the connections in parallel by calling Executer_execute,
- * with a timeout specified in milliseconds.
- *
- * Executor_execute(executor, 500);
- *
- * This method returns when all replies have been received, or a timeout has occurred.
- *
- * If everything went well we can now read the replies from our batch (or batches):
- *
- * ReplyType reply_type;
- * char *reply_data;
- * size_t reply_len;
- * int level;
- * while(level = Batch_next_reply(batch, &reply_type, &reply_data, &reply_len)) {
- * 		printf("level: %d, reply type: %d, data: '%.*s'\n", level, (int)reply_type, reply_len, reply_data);
- * }
- *
- * If a function returns an error code (e.g. -1). You can call Module_last_error to get a textual description of the error.
- *
- * If a reply is an error reply (RT_ERROR type), the textual description will be in the reply_data.
+ * TODO describe primary API!
  */
 #ifndef HANSOCK_H
 #define HANSOCK_H
@@ -170,11 +134,31 @@ LIBHANSOCKAPI void Batch_write_decimal(Batch *batch, long decimal);
  */
 LIBHANSOCKAPI char *Batch_error(Batch *batch);
 
+/**
+ * Gets the replies from this batch as an iterator. YOU are responsible for freeing the iterator when you are done iterating.
+ * Some replies have child replies. You can call ReplyIterator_child_iterator to get an iterator over these children.
+ */
 LIBHANSOCKAPI ReplyIterator *Batch_get_replies(Batch *batch);
 
+/**
+ * Advances the iterator to the next reply. returns 0 when there are no more replies to read.
+ */
 LIBHANSOCKAPI int ReplyIterator_next(ReplyIterator *iterator);
+
+/**
+ * Fetch the data associated with the reply currently pointed to by the iterator.
+ */
 LIBHANSOCKAPI int ReplyIterator_get_reply(ReplyIterator *iterator, ReplyType *reply_type, char **data, size_t *len);
+
+/*
+ * Get an iterator over the children of the reply pointed to by the given iterator.
+ * Returns NULL if there are no children.
+ */
 LIBHANSOCKAPI ReplyIterator *ReplyIterator_child_iterator(ReplyIterator *iterator);
+
+/**
+ * Releases any resources held by the reply iterator
+ */
 LIBHANSOCKAPI void ReplyIterator_free(ReplyIterator *iterator);
 
 /**
@@ -200,8 +184,9 @@ LIBHANSOCKAPI int Executor_add(Executor *executor, Connection *connection, Batch
  * will be gathered in their respective batches.
  * When all batches complete within the timeout, the result of this function is 1.
  * If a timeout occurs before completion. the result of this function is 0, and all commands in all batches that
- * were not completed at the time of timeout will get an error reply.
- * If there is an error with this method itself, it will return -1.
+ * were not completed at the time of timeout will contain an timeout error reply.
+ * If 1 or more batches had an error, the function will return -1. The respective batches will have their errors set.
+ * If there is an error with this method itself (e.g. the polling or select method), it will return -2 (And you consult the global module error).
  */
 LIBHANSOCKAPI int Executor_execute(Executor *executor, int timeout_ms);
 

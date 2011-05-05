@@ -45,10 +45,8 @@ Basically,
     Executor_add(executor, connection, batch);
 
     //execute it
-    if(Executor_execute(executor, 500) <= 0) {
-        return -1;
-    }
-    else {
+    if(Executor_execute(executor, 500) > 0) {
+        //all ok
         ReplyIterator *replies = Batch_get_replies(batch);
         while(ReplyIterator_next(replies)) {
             ReplyType reply_type;
@@ -57,14 +55,16 @@ Basically,
             ReplyIterator_get_reply(replies, &reply_type, &reply_data, &reply_len);
             printf("reply type: %d, data: '%.*s'\n", (int)reply_type, reply_len, reply_data);
             ReplyIterator *children = ReplyIterator_child_iterator(replies);
-            while(ReplyIterator_next(children)) {
-                ReplyType child_reply_type;
-                char *child_reply_data;
-                size_t child_reply_len;
-                ReplyIterator_get_reply(children, &child_reply_type, &child_reply_data, &child_reply_len);
-                printf("\tchild reply type: %d, data: '%.*s'\n", (int)child_reply_type, child_reply_len, child_reply_data);
+            if(children != NULL) { //have to check for NULL, not all replies have children!
+                while(ReplyIterator_next(children)) {
+                    ReplyType child_reply_type;
+                    char *child_reply_data;
+                    size_t child_reply_len;
+                    ReplyIterator_get_reply(children, &child_reply_type, &child_reply_data, &child_reply_len);
+                    printf("\tchild reply type: %d, data: '%.*s'\n", (int)child_reply_type, child_reply_len, child_reply_data);
+                }
+                ReplyIterator_free(children);
             }
-            ReplyIterator_free(children);
         }
         ReplyIterator_free(replies);
     }
@@ -73,3 +73,13 @@ Basically,
     Executor_free(executor);
     Batch_free(batch);
     Connection_free(connection);
+
+
+Error Handling
+
+Module Errors
+    - per thread 'last' error
+Connection/Batch Errors
+    - aborted batch holds error
+Executor Errors
+    - errors with polling
